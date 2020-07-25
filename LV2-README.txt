@@ -1,3 +1,9 @@
+Instruction to obtain source code:
+
+git clone https://github.com/jpcima/tunefish.git
+cd tunefish
+git submodule update --init --recursive
+
 Instructions to build LV2:
 
 make -C src/tunefish4/Builds/LinuxMakefile -f Makefile.LV2 CONFIG=Release
