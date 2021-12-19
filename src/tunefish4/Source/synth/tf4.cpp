@@ -346,10 +346,10 @@ void eTfLfoReset(eTfLfo &state, eF32 phase)
     state.phase = phase;
 }
 
-eF32 eTfLfoProcess(eTfSynth &synth, eTfInstrument &instr, eTfLfo &lfoState, eU32 paramOffset, eU32 frameSize)
+eF32 eTfLfoProcess(eTfSynth &synth, eTfInstrument &instr, eTfLfo &lfoState, eF32 depthMod, eU32 paramOffset, eU32 frameSize, eF32 *depthOut)
 {
     eF32 freq = instr.params[paramOffset];
-    eF32 depth = instr.params[paramOffset+1];
+    eF32 depth = instr.params[paramOffset+1] * depthMod;
     eU32 shape = eFtoL(eRoundNearest(instr.params[paramOffset + 2] * (TF_LFOSHAPECOUNT - 1)));
 
     eF32 result = 1.0f;
@@ -372,6 +372,9 @@ eF32 eTfLfoProcess(eTfSynth &synth, eTfInstrument &instr, eTfLfo &lfoState, eU32
         lfoState.phase -= ePI*2;
 
     lfoState.result = result;
+    if (depthOut)
+        *depthOut = depth;
+    
     return result;
 }
 
@@ -415,22 +418,32 @@ eBool eTfModMatrixProcess(eTfSynth &synth, eTfInstrument &instr, eTfModMatrix &s
             mod = 1.0f + mod * (TF_MM_MODRANGE-1.0f);
         }
 
-        state.entries[i].src   = (eTfModMatrix::Input)eFtoL(eRoundNearest(instr.params[TF_MM1_SOURCE + i*3] * (eTfModMatrix::INPUT_COUNT-1)));
-        state.entries[i].dst   = (eTfModMatrix::Output)eFtoL(eRoundNearest(instr.params[TF_MM1_TARGET + i*3] * (eTfModMatrix::OUTPUT_COUNT-1)));
-        state.entries[i].mod   = mod;
-        state.entries[i].result= 1.0f;
+        state.entries[i].src        = (eTfModMatrix::Input)eFtoL(eRoundNearest(instr.params[TF_MM1_SOURCE + i*3] * (eTfModMatrix::INPUT_COUNT-1)));
+        state.entries[i].dst        = (eTfModMatrix::Output)eFtoL(eRoundNearest(instr.params[TF_MM1_TARGET + i*3] * (eTfModMatrix::OUTPUT_COUNT-1)));
+        state.entries[i].mod        = mod;
+        state.entries[i].result     = 1.0f;
+        state.entries[i].srcDepth   = 1.0f;
 
         switch(state.entries[i].src)
         {
         case eTfModMatrix::INPUT_LFO1:
-            if (!lfo1_done)    state.values[eTfModMatrix::INPUT_LFO1] = eTfLfoProcess(synth, instr, state.lfoState[0], TF_LFO1_RATE, frameSize);
-            lfo1_done = eTRUE;
+            if (!lfo1_done)
+            {
+                eF32 depthMod = eTfModMatrixGet(state, eTfModMatrix::OUTPUT_LFO1_DEPTH);
+                state.values[eTfModMatrix::INPUT_LFO1] = eTfLfoProcess(synth, instr, state.lfoState[0], depthMod, TF_LFO1_RATE, frameSize, &state.entries[i].srcDepth);
+                lfo1_done = eTRUE;
+            }
             state.entries[i].result = state.entries[i].mod * state.values[eTfModMatrix::INPUT_LFO1] * state.modulation[i];
             break;
 
         case eTfModMatrix::INPUT_LFO2:
-            if (!lfo2_done) state.values[eTfModMatrix::INPUT_LFO2] = eTfLfoProcess(synth, instr, state.lfoState[1], TF_LFO2_RATE, frameSize);
-            lfo2_done = eTRUE;
+            if (!lfo2_done)
+            {
+                eF32 depthMod = eTfModMatrixGet(state, eTfModMatrix::OUTPUT_LFO2_DEPTH);
+                state.values[eTfModMatrix::INPUT_LFO2] = eTfLfoProcess(synth, instr, state.lfoState[1], depthMod, TF_LFO2_RATE, frameSize, &state.entries[i].srcDepth);
+                lfo2_done = eTRUE;
+            }
+                
             state.entries[i].result = state.entries[i].mod * state.values[eTfModMatrix::INPUT_LFO2] * state.modulation[i];
             break;
 
@@ -457,6 +470,11 @@ eBool eTfModMatrixProcess(eTfSynth &synth, eTfInstrument &instr, eTfModMatrix &s
 
             state.entries[i].result = state.entries[i].mod * state.values[eTfModMatrix::INPUT_ADSR2] * state.modulation[i];
             break;
+                
+        case eTfModMatrix::INPUT_MODWHEEL:
+            state.values[eTfModMatrix::INPUT_MODWHEEL] = instr.modWheel;
+            state.entries[i].result = state.entries[i].mod * state.values[eTfModMatrix::INPUT_MODWHEEL] * state.modulation[i];
+            break;
         default:
             break;
         }
@@ -471,14 +489,30 @@ eBool eTfModMatrixProcess(eTfSynth &synth, eTfInstrument &instr, eTfModMatrix &s
 	return playing1 || playing2;
 }
 
-eF32 eTfModMatrixGet(eTfModMatrix &state, eTfModMatrix::Output output)
+eF32 eTfModMatrixGet(eTfModMatrix &state, eTfModMatrix::Output output, eTfModMatrix::Range range)
 {
     eF32 value = 1.0f;
 
     for(eU32 i=0; i<TF_MODMATRIXENTRIES; i++)
     {
         if (state.entries[i].dst == output)
-            value *= state.entries[i].result;
+        {
+            auto mod = state.entries[i].result;
+            switch(range)
+            {
+                case eTfModMatrix::MMR_ONE_TO_ZERO:
+                    break;
+                case eTfModMatrix::MMR_ZERO_TO_ONE:
+                    mod = 1.0f - mod;
+                    break;
+                case eTfModMatrix::MMR_MINUS_ONE_TO_ONE:
+                    mod = 1.0f - mod;
+                    mod = (mod - (state.entries[i].srcDepth / 2)) * 2;
+                    break;
+            }
+
+            value *= mod;
+        }
     }
 
     return value;
@@ -785,7 +819,11 @@ eBool eTfGeneratorProcess(eTfSynth &synth, eTfInstrument &instr, eTfVoice &voice
         detune  *= eTfModMatrixGet(voice.modMatrix, eTfModMatrix::OUTPUT_DETUNE);
         drive   *= eTfModMatrixGet(voice.modMatrix, eTfModMatrix::OUTPUT_DRIVE);
         spread  *= eTfModMatrixGet(voice.modMatrix, eTfModMatrix::OUTPUT_SPREAD);
-        eF32 freqMod = eTfModMatrixGet(voice.modMatrix, eTfModMatrix::OUTPUT_FREQ);
+        panning *= eTfModMatrixGet(voice.modMatrix, eTfModMatrix::OUTPUT_PAN);
+        panning = eClamp(0.0f, panning, 1.0f);
+		eF32 freqMod = eTfModMatrixGet(voice.modMatrix, eTfModMatrix::OUTPUT_FREQ);
+        //eF32 freqMod = eTfModMatrixGet(voice.modMatrix, eTfModMatrix::OUTPUT_FREQ, eTfModMatrix::MMR_MINUS_ONE_TO_ONE);
+        //freqMod = freqMod * 0.1f + 1.0f;  // we need it in the range 0.9 - 1.1
 
         maxFrameVolume = eMax(maxCurrentVolume, vol);
         if (maxFrameVolume < 0.001f)
@@ -1213,6 +1251,7 @@ void eTfInstrumentInit(eTfInstrument &instr)
 #endif
 
     instr.lfo1Phase = instr.lfo2Phase = 0.0f;
+    instr.modWheel = 0.0f;
 
     for(eU32 i=0; i<TF_MAXEFFECTS; i++)
     {
@@ -1520,6 +1559,11 @@ void eTfInstrumentPitchBend(eTfInstrument &instr, eF32 semitones, eF32 cents)
     {
         eTfVoicePitchBend(instr.voice[i], semitones, cents);
     }
+}
+
+void eTfInstrumentModWheel(eTfInstrument &instr, eF32 amount)
+{
+    instr.modWheel = amount;
 }
 
 void eTfInstrumentPanic(eTfInstrument &instr)

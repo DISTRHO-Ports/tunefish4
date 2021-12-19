@@ -138,7 +138,7 @@ const String Tunefish4AudioProcessor::getParameterName (int index)
 
 const String Tunefish4AudioProcessor::getParameterText (int )
 {
-    return String::empty;
+    return "";
 }
 
 bool Tunefish4AudioProcessor::acceptsMidi() const
@@ -374,6 +374,14 @@ void Tunefish4AudioProcessor::processEvents(MidiBuffer &midiMessages, eU32 messa
 
             eTfInstrumentPitchBend(*tf, semitones, cents);
         }
+        else if (midiMessage.isController())
+        {
+            const auto controllerNumber = midiMessage.getControllerNumber();
+            const auto controllerValue = midiMessage.getControllerValue();
+
+            if (controllerNumber == 1)
+                eTfInstrumentModWheel(*tf, controllerValue / 127.0f);
+        }
     }
 }
 
@@ -427,7 +435,7 @@ bool Tunefish4AudioProcessor::saveProgram(eU32 index) const
     file.getParentDirectory().createDirectory();
     file.deleteFile();
 
-    ScopedPointer<FileOutputStream> stream = file.createOutputStream();
+    auto stream = file.createOutputStream();
     if (stream == nullptr)
     {
         NativeMessageBox::showMessageBox(AlertWindow::AlertIconType::WarningIcon,
@@ -436,15 +444,15 @@ bool Tunefish4AudioProcessor::saveProgram(eU32 index) const
         return false;
     }
 
-    stream->writeText(programs[index].getName(), false, false);
-    stream->writeText("\r\n", false, false);
+    stream->writeText(programs[index].getName(), false, false, nullptr);
+    stream->writeText("\r\n", false, false, nullptr);
 
     for(eU32 i=0;i<TF_PARAM_COUNT;i++)
     {
-        stream->writeText(TF_NAMES[i], false, false);
-        stream->writeText(";", false, false);
-        stream->writeText(String(programs[index].getParam(i)), false, false);
-        stream->writeText("\r\n", false, false);
+        stream->writeText(TF_NAMES[i], false, false, nullptr);
+        stream->writeText(";", false, false, nullptr);
+        stream->writeText(String(programs[index].getParam(i)), false, false, nullptr);
+        stream->writeText("\r\n", false, false, nullptr);
     }
 
     return true;
@@ -517,42 +525,41 @@ bool Tunefish4AudioProcessor::writeFactoryPatchHeader(File headerFile) const
     if (!headerFile.deleteFile())
         return false;
 
-    FileOutputStream *out = headerFile.createOutputStream();
+    auto out = headerFile.createOutputStream();
     if (!out)
         return false;
 
-    out->writeText("const int TF_FACTORY_PATCH_COUNT = " + String(TF_PLUG_NUM_PROGRAMS) + ";\r\n", false, false);
-    out->writeText("const int TF_FACTORY_PATCH_PARAMCOUNT = " + String(TF_PARAM_COUNT) + ";\r\n", false, false);
-    out->writeText("const double TF_FACTORY_PATCHES[TF_FACTORY_PATCH_COUNT][TF_FACTORY_PATCH_PARAMCOUNT] = {\r\n", false, false);
+    out->writeText("const int TF_FACTORY_PATCH_COUNT = " + String(TF_PLUG_NUM_PROGRAMS) + ";\r\n", false, false, nullptr);
+    out->writeText("const int TF_FACTORY_PATCH_PARAMCOUNT = " + String(TF_PARAM_COUNT) + ";\r\n", false, false, nullptr);
+    out->writeText("const double TF_FACTORY_PATCHES[TF_FACTORY_PATCH_COUNT][TF_FACTORY_PATCH_PARAMCOUNT] = {\r\n", false, false, nullptr);
     
     for (auto i=0; i<TF_PLUG_NUM_PROGRAMS; i++)
     {
         auto &program = programs[i];
 
-        out->writeText("\t{\r\n\t\t", false, false);
+        out->writeText("\t{\r\n\t\t", false, false, nullptr);
 
         for (auto j=0; j<TF_PARAM_COUNT; j++)
         {
             auto value = program.getParam(j);            
-            out->writeText(String(value) + ", ", false, false);            
+            out->writeText(String(value) + ", ", false, false, nullptr);
         }
 
-        out->writeText("\r\n\t},\r\n", false, false);
+        out->writeText("\r\n\t},\r\n", false, false, nullptr);
     }
 
-    out->writeText("};\r\n\r\n", false, false);
+    out->writeText("};\r\n\r\n", false, false, nullptr);
 
-    out->writeText("const char * TF_FACTORY_PATCH_NAMES[TF_FACTORY_PATCH_COUNT] = {\r\n", false, false);
+    out->writeText("const char * TF_FACTORY_PATCH_NAMES[TF_FACTORY_PATCH_COUNT] = {\r\n", false, false, nullptr);
 
     for (auto i = 0; i<TF_PLUG_NUM_PROGRAMS; i++)
     {
         auto &program = programs[i];
-        out->writeText("\t\"" + program.getName() + "\",\r\n", false, false);
+        out->writeText("\t\"" + program.getName() + "\",\r\n", false, false, nullptr);
     }
 
-    out->writeText("};\r\n\r\n", false, false);
+    out->writeText("};\r\n\r\n", false, false, nullptr);
            
-    delete out;
     return true;
 }
 
@@ -561,7 +568,7 @@ bool Tunefish4AudioProcessor::loadPresetFile(File file, bool applyToSynth, int i
 	if (index == -1)
 		index = currentProgramIndex;
 	
-	ScopedPointer<FileInputStream> stream = file.createInputStream();
+	auto stream = file.createInputStream();
 	if (stream == nullptr)
 	{
 		NativeMessageBox::showMessageBox(AlertWindow::AlertIconType::WarningIcon,
@@ -580,7 +587,7 @@ bool Tunefish4AudioProcessor::loadPresetFile(File file, bool applyToSynth, int i
 			break;
 
 		StringArray parts;
-		parts.addTokens(line, ";", String::empty);
+		parts.addTokens(line, ";", "");
 
 		if (parts.size() == 2)
 		{
@@ -637,7 +644,7 @@ void Tunefish4AudioProcessor::getStateInformation (MemoryBlock& destData)
 
 void Tunefish4AudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    ScopedPointer<XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
+    auto xmlState (getXmlFromBinary (data, sizeInBytes));
 
     if (xmlState != nullptr)
     {

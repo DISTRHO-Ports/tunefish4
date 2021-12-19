@@ -32,8 +32,8 @@
 // this is used for reading patches from a .txt file
 #define HAVE_PATCH_LOADER
 
-const char* MOD_SOURCES = "none|LFO1|LFO2|ADSR1|ADSR2";
-const char* MOD_TARGETS = "none|Bandwidth|Damp|Harmonics|Scale|Volume|Frequency|Panning|Detune|Spread|Drive|Noise|LP Cutoff|LP Resonance|HP Cutoff|HP Resonance|BP Cutoff|BP Q|NT Cutoff|NT Q|ADSR1 Decay|ADSR2 Decay|Mod1|Mod2|Mod3|Mod4|Mod5|Mod6|Mod7|Mod8";
+const char* MOD_SOURCES = "none|LFO1|LFO2|ADSR1|ADSR2|ModWheel";
+const char* MOD_TARGETS = "none|Bandwidth|Damp|Harmonics|Scale|Volume|Frequency|Panning|Detune|Spread|Drive|Noise|LP Cutoff|LP Resonance|HP Cutoff|HP Resonance|BP Cutoff|BP Q|NT Cutoff|NT Q|ADSR1 Decay|ADSR2 Decay|Mod1|Mod2|Mod3|Mod4|Mod5|Mod6|Mod7|Mod8|LFO1 Depth|LFO2 Depth";
 const char* FX_SECTIONS = "none|Distortion|Delay|Chorus|Flanger|Reverb|Formant|EQ";
 
 
@@ -231,8 +231,8 @@ Tunefish4AudioProcessorEditor::Tunefish4AudioProcessorEditor (Tunefish4AudioProc
     m_imgShapeSawDown(Image::ARGB, PIXWIDTH, PIXHEIGHT, true),
     m_imgShapeSquare(Image::ARGB, PIXWIDTH, PIXHEIGHT, true),
     m_imgShapeNoise(Image::ARGB, PIXWIDTH, PIXHEIGHT, true),
-    m_midiKeyboard(ownerFilter->keyboardState, MidiKeyboardComponent::horizontalKeyboard),
-    m_meter(*ownerFilter, 2, 0)
+    m_meter(*ownerFilter, 2, 0),
+    m_midiKeyboard(ownerFilter->keyboardState, MidiKeyboardComponent::horizontalKeyboard)
 {
 	setLookAndFeel(TfLookAndFeel::getInstance());
     setSize(1080, 800);
@@ -611,7 +611,7 @@ void Tunefish4AudioProcessorEditor::_addComboBox(Component *parent, ComboBox &co
     parent->addChildComponent(&combobox);
 
     StringArray itemArray;
-    itemArray.addTokens(items, "|", String::empty);
+    itemArray.addTokens(items, "|", "");
 
     combobox.setVisible(true);
     combobox.addListener(this);

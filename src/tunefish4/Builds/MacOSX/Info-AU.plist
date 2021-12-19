@@ -25,5 +25,31 @@
     <string>Brain Control</string>
     <key>NSHighResolutionCapable</key>
     <true/>
+    <key>AudioComponents</key>
+    <array>
+      <dict>
+        <key>name</key>
+        <string>Brain Control: Tunefish4</string>
+        <key>description</key>
+        <string>Tunefish4</string>
+        <key>factoryFunction</key>
+        <string>Tunefish4AUFactory</string>
+        <key>manufacturer</key>
+        <string>Bctr</string>
+        <key>type</key>
+        <string>aumu</string>
+        <key>subtype</key>
+        <string>Tfs4</string>
+        <key>version</key>
+        <integer>262912</integer>
+        <key>resourceUsage</key>
+        <dict>
+          <key>network.client</key>
+          <true/>
+          <key>temporary-exception.files.all.read-write</key>
+          <true/>
+        </dict>
+      </dict>
+    </array>
   </dict>
 </plist>

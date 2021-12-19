@@ -17,7 +17,7 @@ $(JUCE_OBJDIR)/include_juce_audio_plugin_client_LV2_.o: ../../JuceLibraryCode/in
 	@echo "Compiling include_juce_audio_plugin_client_LV2.cpp"
 	$(V_AT)$(CXX) $(JUCE_CXXFLAGS) $(JUCE_CPPFLAGS_LV2) $(JUCE_CFLAGS_LV2) -o "$@" -c "$<"
 
-$(JUCE_OUTDIR_LV2)/$(JUCE_TARGET_LV2) : check-pkg-config $(OBJECTS_LV2) $(RESOURCES) $(JUCE_OUTDIR)/$(JUCE_TARGET_SHARED_CODE)
+$(JUCE_OUTDIR_LV2)/$(JUCE_TARGET_LV2) : $(OBJECTS_LV2) $(RESOURCES) $(JUCE_OUTDIR)/$(JUCE_TARGET_SHARED_CODE)
 	@echo Linking "Tunefish4 - LV2"
 	-$(V_AT)mkdir -p $(JUCE_BINDIR)
 	-$(V_AT)mkdir -p $(JUCE_LIBDIR)

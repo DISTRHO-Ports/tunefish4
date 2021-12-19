@@ -401,6 +401,13 @@ struct eTfGenerator
 
 struct eTfModMatrix
 {
+    enum Range
+    {
+        MMR_ONE_TO_ZERO,
+        MMR_ZERO_TO_ONE,
+        MMR_MINUS_ONE_TO_ONE,
+    };
+    
     enum Input
     {
         INPUT_NONE = 0,
@@ -409,8 +416,8 @@ struct eTfModMatrix
         INPUT_LFO2,
         INPUT_ADSR1,
         INPUT_ADSR2,
-
-        INPUT_RESERVED1,
+        INPUT_MODWHEEL,
+        
         INPUT_RESERVED2,
         INPUT_RESERVED3,
         INPUT_RESERVED4,
@@ -457,9 +464,9 @@ struct eTfModMatrix
         OUTPUT_MOD6,
         OUTPUT_MOD7,
         OUTPUT_MOD8,
-
-        OUTPUT_RESERVED1,
-        OUTPUT_RESERVED2,
+        OUTPUT_LFO1_DEPTH,
+        OUTPUT_LFO2_DEPTH,
+        
         OUTPUT_RESERVED3,
         OUTPUT_RESERVED4,
         OUTPUT_RESERVED5,
@@ -476,6 +483,7 @@ struct eTfModMatrix
     {
         Input       src;
         Output      dst;
+        eF32        srcDepth;
         eF32        mod;
         eF32        result;
     };
@@ -600,6 +608,7 @@ struct eTfInstrument
     eS16            output[TF_MAXFRAMESIZE*2];
     eF32            lfo1Phase;
     eF32            lfo2Phase;
+    eF32            modWheel;
     eTfVoice        voice[TF_MAXVOICES];
     eTfVoice *      latestTriggeredVoice;
     eF32            tempBuffers[2][TF_MAXFRAMESIZE];
@@ -670,7 +679,7 @@ void    eTfEnvelopeNoteOff(eTfEnvelope &state);
 eF32    eTfEnvelopeProcess(eTfSynth &synth, eTfInstrument &instr, eTfEnvelope &envState, eF32 decayMod, eU32 paramOffset, eU32 frameSize);
 
 void    eTfLfoReset(eTfLfo &state, eF32 phase);
-eF32    eTfLfoProcess(eTfSynth &synth, eTfInstrument &instr, eTfLfo &lfoState, eU32 paramOffset, eU32 frameSize);
+eF32    eTfLfoProcess(eTfSynth &synth, eTfInstrument &instr, eTfLfo &lfoState, eF32 depthMod, eU32 paramOffset, eU32 frameSize, eF32 *depthOut = nullptr);
 
 void    eTfModMatrixReset(eTfModMatrix &state);
 void    eTfModMatrixNoteOn(eTfModMatrix &state, eF32 lfoPhase1, eF32 lfoPhase2);
@@ -678,7 +687,7 @@ void    eTfModMatrixNoteOff(eTfModMatrix &state);
 void    eTfModMatrixPanic(eTfModMatrix &state);
 eBool   eTfModMatrixIsActive(eTfModMatrix &state);
 eBool   eTfModMatrixProcess(eTfSynth &synth, eTfInstrument &instr, eTfModMatrix &state, eU32 frameSize);
-eF32    eTfModMatrixGet(eTfModMatrix &state, eTfModMatrix::Output output);
+eF32    eTfModMatrixGet(eTfModMatrix &state, eTfModMatrix::Output output, eTfModMatrix::Range range = eTfModMatrix::MMR_ONE_TO_ZERO);
 
 void    eTfGeneratorReset(eTfGenerator &state);
 void    eTfGeneratorFft(eTfFftType type, eU32 frameSize, eF32 *buffer);
@@ -707,6 +716,7 @@ void    eTfInstrumentNoteOn(eTfInstrument &instr, eS32 note, eS32 velocity);
 eBool   eTfInstrumentNoteOff(eTfInstrument &instr, eS32 note);
 void    eTfInstrumentAllNotesOff(eTfInstrument &instr);
 void    eTfInstrumentPitchBend(eTfInstrument &instr, eF32 semitones, eF32 cents);
+void    eTfInstrumentModWheel(eTfInstrument &instr, eF32 amount);
 void    eTfInstrumentPanic(eTfInstrument &instr);
 eU32    eTfInstrumentGetPolyphony(eTfInstrument &instr);
 eU32    eTfInstrumentAllocateVoice(eTfInstrument &instr);
