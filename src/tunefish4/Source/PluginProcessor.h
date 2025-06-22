@@ -30,7 +30,7 @@
 #include "tflookandfeel.h"
 #include "synth/tf4.hpp"
 
-const eU32 TF_PLUG_NUM_PROGRAMS = 1000;
+const eU32 TF_PLUG_NUM_PROGRAMS = 92;
 
 
 //==============================================================================
