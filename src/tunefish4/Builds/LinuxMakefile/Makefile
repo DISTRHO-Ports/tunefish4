@@ -24,6 +24,7 @@ ifndef CONFIG
 endif
 
 JUCE_ARCH_LABEL := $(shell uname -m)
+JUCE_SRCDIR := /opt/kxstudio/include/JUCE-6.0.8
 
 ifeq ($(CONFIG),Debug)
   JUCE_BINDIR := build
@@ -35,7 +36,7 @@ ifeq ($(CONFIG),Debug)
     TARGET_ARCH := 
   endif
 
-  JUCE_CPPFLAGS := $(DEPFLAGS) "-DLINUX=1" "-DDEBUG=1" "-D_DEBUG=1" "-DJUCER_LINUX_MAKE_6D53C8B4=1" "-DJUCE_APP_VERSION=4.3.0" "-DJUCE_APP_VERSION_HEX=0x40300" $(shell pkg-config --cflags alsa freetype2 libcurl) -pthread -I../../../../thirdparty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK -I$(HOME)/SDKs/VST_SDK/VST2_SDK -I../../JuceLibraryCode -I../../../../thirdparty/JUCE/modules $(CPPFLAGS)
+  JUCE_CPPFLAGS := $(DEPFLAGS) "-DLINUX=1" "-DDEBUG=1" "-D_DEBUG=1" "-DJUCER_LINUX_MAKE_6D53C8B4=1" "-DJUCE_APP_VERSION=4.3.0" "-DJUCE_APP_VERSION_HEX=0x40300" $(shell pkg-config --cflags alsa freetype2 libcurl) -pthread -I$(JUCE_SRCDIR)/modules/juce_audio_processors/format_types/VST3_SDK -I$(HOME)/SDKs/VST_SDK/VST2_SDK -I../../JuceLibraryCode -I$(JUCE_SRCDIR)/modules $(CPPFLAGS)
 
   JUCE_CPPFLAGS_VST :=  "-DJucePlugin_Build_VST=1" "-DJucePlugin_Build_VST3=0" "-DJucePlugin_Build_AU=0" "-DJucePlugin_Build_AUv3=0" "-DJucePlugin_Build_RTAS=0" "-DJucePlugin_Build_AAX=0" "-DJucePlugin_Build_Standalone=0" "-DJucePlugin_Build_Unity=0"
   JUCE_CFLAGS_VST := -fPIC -fvisibility=hidden
@@ -74,7 +75,7 @@ ifeq ($(CONFIG),Release)
     TARGET_ARCH := 
   endif
 
-  JUCE_CPPFLAGS := $(DEPFLAGS) "-DLINUX=1" "-DNDEBUG=1" "-DJUCER_LINUX_MAKE_6D53C8B4=1" "-DJUCE_APP_VERSION=4.3.0" "-DJUCE_APP_VERSION_HEX=0x40300" $(shell pkg-config --cflags alsa freetype2 libcurl) -pthread -I../../../../thirdparty/JUCE/modules/juce_audio_processors/format_types/VST3_SDK -I$(HOME)/SDKs/VST_SDK/VST2_SDK -I../../JuceLibraryCode -I../../../../thirdparty/JUCE/modules $(CPPFLAGS)
+  JUCE_CPPFLAGS := $(DEPFLAGS) "-DLINUX=1" "-DNDEBUG=1" "-DJUCER_LINUX_MAKE_6D53C8B4=1" "-DJUCE_APP_VERSION=4.3.0" "-DJUCE_APP_VERSION_HEX=0x40300" $(shell pkg-config --cflags alsa freetype2 libcurl) -pthread -I$(JUCE_SRCDIR)/modules/juce_audio_processors/format_types/VST3_SDK -I$(HOME)/SDKs/VST_SDK/VST2_SDK -I../../JuceLibraryCode -I$(JUCE_SRCDIR)/modules $(CPPFLAGS)
 
   JUCE_CPPFLAGS_VST :=  "-DJucePlugin_Build_VST=1" "-DJucePlugin_Build_VST3=0" "-DJucePlugin_Build_AU=0" "-DJucePlugin_Build_AUv3=0" "-DJucePlugin_Build_RTAS=0" "-DJucePlugin_Build_AAX=0" "-DJucePlugin_Build_Standalone=0" "-DJucePlugin_Build_Unity=0"
   JUCE_CFLAGS_VST := -fPIC -fvisibility=hidden
