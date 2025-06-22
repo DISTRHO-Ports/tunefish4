@@ -20,6 +20,10 @@
 
 #define JucePlugin_Build_LV2 1
 #define JucePlugin_LV2URI "https://github.com/paynebc/tunefish"
+#define JucePlugin_WantsLV2Latency 0
+#define JucePlugin_WantsLV2Presets 0
+#define JucePlugin_WantsLV2State 0
+#define JucePlugin_WantsLV2TimePos 0
 
 // [END_USER_CODE_SECTION]
 
